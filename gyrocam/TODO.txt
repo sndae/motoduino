@@ -1,0 +1,14 @@
+=== Gyrocam v3 : ===
+
+Tester et grapher la position du servo sur processing pour voir si tout es ok
+
+
+
+=== Test : ===
+
+Voir si la température de l'IMU augmente en utilisation prolongé
+	si non : RAS
+	si oui : ajouter le check de la température pour réduire la prise de valeur pour éviter de griller le système
+	si oui : checker sur le datasheet la temp critique pour stopper le système en cas de température trop importante
+	
+		

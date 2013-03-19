@@ -1,0 +1,21 @@
+=== gyro_accelero : ===
+
+gyrocam avec librairie I2C Wire (buggé)
+
+
+
+=== gyro_accelero v2 : ===
+
+gyrocam avec librairie I2C "I2c" -> fonctionne nickel
+	+ filtre entre chaque calcul d'angle.
+
+filtre anti vibration : abs(new_value - old_value) > MAP_RANGE*(filter/100) ? new_value :  old_value
+
+
+
+
+=== gyro_accelero v3 : (en cours) ===
+
+gestion de l'axe Z (axe vertical sol vers le ciel) pour savoir si le système à la tête en bas
+si force sur Z négative -> sens normal
+sinon, inversé l'angle (*-1)
