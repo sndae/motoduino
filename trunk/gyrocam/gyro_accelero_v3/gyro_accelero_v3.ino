@@ -13,6 +13,7 @@
 
 #define MIN_ANALOG                 -16500
 #define MAX_ANALOG                 16500
+#define CENTER_ANALOG              0
 #define MAP_RANGE                  155
 #define MAP_START                  25
 #define MAP_CENTER                 90 // 25 + 65 = 90, 90 + 65 = 155
@@ -20,8 +21,10 @@
 #define SERVO_PIN                  3
 
 
+
 double angleX;
 double sensUpDown;
+boolean sensDown;
 int pos = MAP_CENTER;
 Servo myservo;  // create servo object to control a servo 
 int i = 0; 
@@ -34,6 +37,7 @@ void setup() {
   GyroAndAcceleroInit();
 
   angleX, sensUpDown = 0.0; 
+  sensDown = false;
   myservo.attach(SERVO_PIN);
   myservo.write(pos);
   
@@ -86,10 +90,20 @@ void getAngles(){
 
   sensUpDown = (0.9) * sensUpDown + (0.1) * dataAccelZ;
   
-  if(i == 20){
-    Serial.print("Sens Up Down : ");
-    Serial.print(sensUpDown);
-  }
+  // Si l'axe Z vaut au moins 8000, on est presque sur de la position, sinon on attend, je système est trop instable
+  if(sensUpDown > MAX_ANALOG/2){ // à l'endroit
+    if(sensDown){
+       sensDown = false;
+       dataAccelX *= -1;
+       Serial.println("Reversing !!!");
+    }
+  } else if(sensUpDown < MIN_ANALOG/2) { // la tête à l'envers, on inverse
+    if(!sensDown){ // is sens Up
+      sensDown = true;
+      dataAccelX *= -1;
+      Serial.println("Reversing !!!");
+    } 
+  }      
   
   short newAngleX = (0.900)*(angleX + dataGyroY * -0.5) + (0.10)*(dataAccelX);  
   angleX = filter(angleX, newAngleX, 30);
@@ -98,31 +112,23 @@ void getAngles(){
 
   // TUR N THE SERVO
   if(i%5){
-    // Si l'axe Z vaut au moins 8000, on est presque sur de la position, sinon on attend, je système est trop instable
-    if(sensUpDown > MAX_ANALOG/2){
+    
+    if(!sensDown){
       myservo.write(pos);
-    } else if(sensUpDown < MIN_ANALOG/2) { // la tête à l'envers, on inverse
-      pos = ((pos - MAP_CENTER)*(-1) + MAP_CENTER);
-      myservo.write(pos);
+    } else { // la tête à l'envers, on inverse
+      //pos = ((pos - MAP_CENTER)*(-1) + MAP_CENTER);
+      myservo.write(pos);      
     }      
   }
 
   // PRINT DEBUG
   if(i == 20){
-    Serial.print("Pos = "); 
+    //Serial.print("Pos = "); 
     Serial.println(pos);
-//  Serial.print(", X = "); 
-//  Serial.print(dataGyroX);  
-//  Serial.print(", Y = "); 
-//  Serial.println(dataGyroY);
-  Serial.print("AngleX = (0.900)*("); 
-  Serial.print(angleX);
-  Serial.print(" + "); 
-  Serial.print(dataGyroY);  
-  Serial.print("*0.10) + (0.10)*("); 
-  Serial.print(dataAccelX);
-  Serial.println(")");
-
+  Serial.print("Accel X = "); 
+  Serial.print(dataAccelX);  
+  Serial.print("Gyro Y = "); 
+  Serial.println(dataGyroY);
   i = 0;
   }  
   i++;
