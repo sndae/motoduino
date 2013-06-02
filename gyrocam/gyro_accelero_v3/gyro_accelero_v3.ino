@@ -1,6 +1,7 @@
 
-#include "I2C.h" 
 #include <Servo.h> 
+#include "I2C.h"
+
 
 #define GYRO                       0x69
 #define ACCEL                      0x40
@@ -26,7 +27,7 @@ double angleX;
 double sensUpDown;
 boolean sensDown;
 int pos = MAP_CENTER;
-Servo myservo;  // create servo object to control a servo 
+// Servo myservo;  // create servo object to control a servo 
 int i = 0; 
 
 void setup() {
@@ -35,11 +36,9 @@ void setup() {
   I2c.begin();
   
   GyroAndAcceleroInit();
-
-  angleX, sensUpDown = 0.0; 
-  sensDown = false;
-  myservo.attach(SERVO_PIN);
-  myservo.write(pos);
+ 
+//  myservo.attach(SERVO_PIN);
+//  myservo.write(pos);
   
   Serial.println("Sensors have been initialized"); 
 } 
@@ -49,8 +48,8 @@ void GyroAndAcceleroInit()
   // reset the gyro 
   I2c.write(GYRO, GYRO_RESET, GYRO_RESET_VALUE);
   delay(10); 
-  // low pass filter 10 Hz 
-  I2c.write(GYRO, GYRO_LOW_PASS_FILTER, GYRO_LOW_PASS_FILTER_10Hz);
+  // low pass filter 10 Hz (0x05) + 2000°/sec (0x18)
+  I2c.write(GYRO, GYRO_LOW_PASS_FILTER, 0x1D);
   // use internal oscillator 
   I2c.write(GYRO, GYRO_INTERNAL_OSCILLATOR, 0x01);
   
@@ -88,50 +87,31 @@ void getAngles(){
   short dataAccelZ = I2c.receive(); 
   dataAccelZ += I2c.receive() << 8; 
 
-  sensUpDown = (0.9) * sensUpDown + (0.1) * dataAccelZ;
-  
-  // Si l'axe Z vaut au moins 8000, on est presque sur de la position, sinon on attend, je système est trop instable
-  if(sensUpDown > MAX_ANALOG/2){ // à l'endroit
-    if(sensDown){
-       sensDown = false;
-       dataAccelX *= -1;
-       Serial.println("Reversing !!!");
-    }
-  } else if(sensUpDown < MIN_ANALOG/2) { // la tête à l'envers, on inverse
-    if(!sensDown){ // is sens Up
-      sensDown = true;
-      dataAccelX *= -1;
-      Serial.println("Reversing !!!");
-    } 
-  }      
-  
-  short newAngleX = (0.900)*(angleX + dataGyroY * -0.5) + (0.10)*(dataAccelX);  
-  angleX = filter(angleX, newAngleX, 30);
+
+//  short newAngleX = (0.900)*(angleX + dataGyroY * -0.5) + (0.10)*(dataAccelX);  
+  short newAngleX = angleX + dataGyroY * -0.5;  
+  angleX = filter(angleX, newAngleX, 80);
+//  angleX = newAngleX;
   
   pos = map(angleX, MIN_ANALOG, MAX_ANALOG, MAP_START, MAP_RANGE);
 
-  // TUR N THE SERVO
-  if(i%5){
-    
-    if(!sensDown){
-      myservo.write(pos);
-    } else { // la tête à l'envers, on inverse
-      //pos = ((pos - MAP_CENTER)*(-1) + MAP_CENTER);
-      myservo.write(pos);      
-    }      
+  if(i%10){
+//     myservo.write(pos);               
+    i = 0;
   }
 
   // PRINT DEBUG
-  if(i == 20){
-    //Serial.print("Pos = "); 
-    Serial.println(pos);
+  
+  Serial.print("Pos = "); 
+  Serial.println(pos);
   Serial.print("Accel X = "); 
   Serial.print(dataAccelX);  
   Serial.print("Gyro Y = "); 
   Serial.println(dataGyroY);
-  i = 0;
-  }  
+    
   i++;
+  
+  delay(200);
 }
 
 short filter(short old_value, short new_value, short filter){
