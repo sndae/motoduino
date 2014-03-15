@@ -163,35 +163,6 @@ void IMU::update() {
     #endif // ACC_WEIGHT
 
     // ========================================================================
-    // Magnetometer
-    //     Frame of reference: BODY
-    //     Units: N/A
-    //     Purpose: Measure the magnetic north vector mVec with components
-    //              codirectional with the body's i, j, and k vectors.
-    // ========================================================================
-    #ifdef MAG_WEIGHT
-    mag.poll();   // ?
-    for (int i=0; i<3; i++) {
-        mVec[i] = mag.get(i);
-    }
-    //if (loopCount % COMM_LOOP_INTERVAL == 0) {
-    //    sp("M(");
-    //    sp(mVec[0]); sp(", ");
-    //    sp(mVec[1]); sp(", ");
-    //    sp(mVec[2]);
-    //    spln(")");
-    //}
-
-    // Express J global unit vectory in BODY frame as jgb.
-    for (int i=0; i<3; i++) {
-        jgb[i] = gyroDCM[i][1];
-    }
-
-    // Calculate yaw drift correction vector wM.
-    vCrossP(jgb, mVec, wM);
-    #endif // MAG_WEIGHT
-
-    // ========================================================================
     // Gyroscope
     //     Frame of reference: BODY
     //     Units: rad/s

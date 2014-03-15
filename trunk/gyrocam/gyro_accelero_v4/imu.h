@@ -8,8 +8,8 @@
 #ifndef IMU_H
 #define IMU_H
 
-#include "itg3200.cpp"
-#include "bma180.cpp"
+#include "itg3200.h"
+#include "bma180.h"
 #include "triMath.h"
 #include "globals.h"
 
